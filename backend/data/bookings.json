@@ -1,0 +1,14 @@
+[
+    {
+        "id": "TKT-376654",
+        "userId": "USR-1",
+        "busId": "BUS-102",
+        "passengerName": "Admin User",
+        "seats": 1,
+        "routeStr": "Mumbai ↔ Pune",
+        "time": "10:00:00",
+        "date": "2026-04-02",
+        "status": "Cancelled",
+        "amount": 450
+    }
+]

@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>Live Tracking - Hub System</title>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+<link rel="stylesheet" href="css/theme.css">
+<script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+<script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+
+<style>
+.track-header { display: flex; align-items: center; justify-content: space-between; padding: 15px 20px; background: var(--panel-bg); border-bottom: 1px solid var(--glass-border); position: relative; z-index: 1000; }
+.track-header .title { font-weight: 700; font-size: 20px; letter-spacing: -0.5px; }
+.track-header .icon { font-size: 22px; cursor: pointer; background: var(--glass-bg); padding: 8px 12px; border-radius: 12px; border: 1px solid var(--glass-border); transition: all 0.3s; }
+.track-header .icon:hover { background: rgba(14, 165, 233, 0.1); color: var(--accent-primary); }
+
+#map { height: 40vh; margin: 15px; border-radius: 20px; overflow: hidden; position: relative; z-index: 1; border: 1px solid var(--glass-border); }
+
+.card { margin: 15px; padding: 25px; position: relative; z-index: 10; }
+.bus-header { display: flex; justify-content: space-between; align-items: center; }
+.bus-number { font-size: 28px; font-weight: 700; margin-bottom: 4px; }
+.route { color: var(--text-muted); font-size: 14px; }
+
+#countdownBox { margin-top: 15px; font-size: 15px; font-weight: 500; color: var(--accent-primary); }
+.status-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 25px; }
+.status-box { background: rgba(0, 0, 0, 0.03); border: 1px solid var(--glass-border); padding: 15px; border-radius: 16px; position: relative; overflow: hidden; }
+[data-theme="dark"] .status-box { background: rgba(0, 0, 0, 0.1); }
+.status-box::before { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; }
+.arrival::before { background: var(--accent-primary); }
+.next-stop::before { background: var(--accent-secondary); }
+
+.status-title { font-size: 12px; color: var(--text-muted); margin-bottom: 5px; }
+.status-value { font-weight: 600; font-size: 20px; color: var(--text-main); }
+.stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
+.stat { background: rgba(0, 0, 0, 0.03); border: 1px solid var(--glass-border); padding: 15px 5px; border-radius: 14px; text-align: center; }
+[data-theme="dark"] .stat { background: rgba(0, 0, 0, 0.1); }
+.stat-title { font-size: 11px; color: var(--text-muted); margin-bottom: 5px; text-transform: uppercase; font-weight: 600; }
+.stat-value { font-weight: 600; font-size: 15px; }
+
+#toast-container { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 10000; display: flex; flex-direction: column; gap: 10px; width: 90%; max-width: 400px; }
+.toast { background: var(--panel-bg); color: var(--text-main); padding: 15px 20px; border-radius: 12px; font-size: 14px; box-shadow: 0 4px 15px var(--shadow-color); border-left: 4px solid var(--accent-primary); display: flex; align-items: center; gap: 10px; animation: slideUp 0.3s ease forwards; }
+@keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+/* CSS Bus Glow */
+.bus-glow { filter: drop-shadow(0 0 10px var(--accent-primary)); transition: transform 0.8s linear !important; }
+</style>
+</head>
+<body>
+
+<div class="track-header animate-fade-in">
+    <span class="icon" onclick="window.location.href='index.html'"><ion-icon name="arrow-back-outline"></ion-icon></span>
+    <span class="title">Sync <span class="text-gradient">Node</span></span>
+    <span class="icon" onclick="toggleTheme()"><ion-icon name="moon-outline" id="themeIcon"></ion-icon></span>
+</div>
+
+<div id="map" class="animate-fade-in delay-1"></div>
+
+<div class="glass-panel card animate-fade-in delay-2">
+    <div class="bus-header">
+        <div>
+            <div class="bus-number text-gradient title-glow" id="busNumberTitle">Connecting...</div>
+            <div id="routeText" class="route">Database sync pending...</div>
+            <div id="busCoords" class="route" style="margin-top: 5px; font-size: 13px; font-weight: 500;"><ion-icon name="location-outline" style="vertical-align:middle;"></ion-icon> <span id="humanLocation">Locating...</span></div>
+        </div>
+    </div>
+    
+    <div id="countdownBox">Synchronizing...</div>
+
+    <div class="status-grid">
+        <div class="status-box arrival">
+            <div class="status-title">PASSENGER DETAILS</div>
+            <div id="passengerLoadDetails" style="font-size: 13px; color: var(--text-main); margin-top:5px; line-height: 1.4;">Loading booking data...</div>
+        </div>
+        
+        <div class="status-box next-stop">
+            <div class="status-title">NEXT STOP</div>
+            <div class="status-value" id="nextStopName" style="font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Calculating...</div>
+            <div style="font-size:12px; color:var(--text-muted); margin-top:4px;" id="nextStopDist">-- km remaining</div>
+        </div>
+    </div>
+
+    <div class="stats">
+        <div class="stat">
+            <div class="stat-title">Current Speed</div>
+            <div class="stat-value" id="busSpeed">-- km/h</div>
+        </div>
+        <div class="stat">
+            <div class="stat-title">Booked Occupancy</div>
+            <div class="stat-value text-gradient" id="passengerCount">--/40</div>
+        </div>
+        <div class="stat">
+            <div class="stat-title">Driver Details</div>
+            <div class="stat-value" id="driverDetails">Fetching...</div>
+        </div>
+        <div class="stat">
+            <div class="stat-title">Bus Class</div>
+            <div class="stat-value" id="busTypeStats">...</div>
+        </div>
+    </div>
+
+</div>
+<div id="toast-container"></div>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+
+<script>
+// Authentication check
+let sessionUser = JSON.parse(localStorage.getItem("session_user"));
+let authToken = localStorage.getItem("auth_token");
+if(!sessionUser || !authToken) window.location.href = "login.html";
+const authHeaders = { "Authorization": `Bearer ${authToken}` };
+
+// URL PARAM SYNC LOGIC
+const params = new URLSearchParams(window.location.search);
+const targetBusId = params.get('busId');
+
+if(!targetBusId) {
+    alert("CRITICAL ERROR: No Bus Target Specified in URL Database Query.");
+    window.location.href="index.html";
+}
+
+document.getElementById("busNumberTitle").innerText = targetBusId;
+
+function toggleTheme() {
+    const currentTheme = document.documentElement.getAttribute("data-theme") || "light";
+    const newTheme = currentTheme === "light" ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", newTheme);
+    localStorage.setItem("theme", newTheme);
+    
+    const icon = document.getElementById("themeIcon");
+    if(icon) icon.name = newTheme === "light" ? "sunny-outline" : "moon-outline";
+}
+if (!localStorage.getItem("theme")) localStorage.setItem("theme", "dark");
+const savedT = localStorage.getItem("theme");
+document.documentElement.setAttribute("data-theme", savedT);
+document.addEventListener("DOMContentLoaded", () => {
+    const icon = document.getElementById("themeIcon");
+    if(icon) icon.name = savedT === "light" ? "sunny-outline" : "moon-outline";
+});
+
+function showToast(message, type="info") {
+    const container = document.getElementById("toast-container");
+    const toast = document.createElement("div"); toast.className = "toast";
+    let icon = "information-circle-outline";
+    if(type === "warning") { toast.style.borderLeftColor = "var(--warning)"; icon = "warning-outline"; }
+    toast.innerHTML = `<ion-icon name="${icon}" style="font-size:20px;"></ion-icon> <span>${message}</span>`;
+    container.appendChild(toast);
+    setTimeout(() => { toast.style.opacity = 0; setTimeout(() => toast.remove(), 300); }, 4000);
+}
+
+const map = L.map('map', {zoomControl: false}).setView([28.6139, 77.2090], 12);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+let busMarker = null;
+let customRouteLine = null;
+
+// Initial Draw of Custom Polyline if present for this target
+const cRouteRaw = localStorage.getItem("custom_route");
+let busCapacity = 40; // Default fallback
+
+if(cRouteRaw) {
+    const rObj = JSON.parse(cRouteRaw);
+    if(rObj.id === targetBusId) {
+        document.getElementById("routeText").innerText = rObj.start + " ↔ " + rObj.dest;
+        const pts = rObj.route.map(o => [o.lat, o.lng]);
+        customRouteLine = L.polyline(pts, {color: "#0ea5e9", weight: 5}).addTo(map);
+        map.fitBounds(customRouteLine.getBounds(), {padding: [50, 50]});
+    }
+}
+
+// Data connections: 1. Bus Data, 2. Booked Occupancy Sync
+fetch(`/api/buses/${targetBusId}`, { headers: authHeaders }).then(res=>res.json()).then(data => {
+    if(data.success && data.bus) {
+        document.getElementById("routeText").innerText = data.bus.routeStr;
+        document.getElementById("busTypeStats").innerText = data.bus.type;
+        if(data.bus.capacity) busCapacity = data.bus.capacity;
+    }
+}).catch(e=>console.error("Bus DB Check failed", e));
+
+fetch(`/api/bookings/bus/${targetBusId}`, { headers: authHeaders }).then(res=>res.json()).then(data => {
+    if(data.success && data.totalBookedSeats !== undefined) {
+        document.getElementById("passengerCount").innerText = `${data.totalBookedSeats}/${busCapacity}`;
+    }
+}).catch(e=>console.error("Booking Check failed", e));
+
+let hasActiveBooking = false;
+fetch(`/api/bookings/user/${sessionUser.id}`, { headers: authHeaders }).then(res=>res.json()).then(data => {
+    const detailsBox = document.getElementById("passengerLoadDetails");
+    if(data.success && data.bookings) {
+        const activeBooking = data.bookings.find(b => b.busId === targetBusId && b.status === "Confirmed");
+        if(activeBooking) {
+            hasActiveBooking = true;
+            detailsBox.innerHTML = `
+                <div style="font-weight:600; color:var(--accent-primary); margin-bottom:2px;">${activeBooking.passengerName}</div>
+                <div>Seat(s): ${activeBooking.seats}</div>
+                <div>Schedule: ${activeBooking.date} @ ${activeBooking.time}</div>
+            `;
+        } else {
+            detailsBox.innerHTML = `No active booking for this route. Accessing via public tracker.`;
+        }
+    } else {
+        detailsBox.innerHTML = `Unable to fetch booking data.`;
+    }
+}).catch(e=>console.error("User Booking Context Error", e));
+
+// Socket sync & Advanced Logic Variables
+const socket = io({ auth: { token: authToken } });
+let lastPingTimestamp = 0;
+let lastGeocodeTime = 0;
+let lastGeocodeStr = "";
+let stopMarkers = [];
+
+// The Last Updated setInterval was replaced by Passenger Details directly. Do nothing.
+
+document.getElementById("countdownBox").innerText = "Synchronizing...";
+
+socket.on("disconnect", () => {
+    const cb = document.getElementById("countdownBox");
+    cb.innerText = "Disconnected";
+    cb.style.color = "var(--danger)";
+});
+
+// Server-sent global broadcasts (e.g. notifications mapped to buses)
+socket.on("broadcastAlert", (data) => {
+    // Filter alerts specific to the bus the user is tracking! Data flowing elegantly.
+    if(data.busId === targetBusId) showToast(data.message, data.type);
+});
+
+socket.on("busLocations", (buses) => {
+    const bus = buses.find(b => b.id === targetBusId);
+    
+    if(!bus) {
+        document.getElementById("countdownBox").innerText = "Disconnected";
+        document.getElementById("countdownBox").style.color = "var(--danger)";
+        return;
+    }
+
+    const cb = document.getElementById("countdownBox");
+    if (hasActiveBooking && bus.etaMins > 0) {
+        cb.innerHTML = `Your bus is arriving in <span style="font-weight:bold; font-size:18px;">${bus.etaMins} mins</span>`;
+        cb.style.color = "var(--accent-primary)";
+    } else if (bus.etaMins > 0) {
+        cb.innerHTML = `ETA: <span style="font-weight:bold;">${bus.etaMins} mins</span> | ${bus.statusLevel}`;
+        cb.style.color = "var(--success)";
+    } else {
+        cb.innerText = `Arrived at destination.`;
+        cb.style.color = "var(--text-main)";
+    }
+    
+    lastPingTimestamp = Date.now();
+    
+    document.getElementById("nextStopName").innerText = bus.nextStopName || "Translating...";
+    document.getElementById("nextStopDist").innerText = bus.distanceLeft ? `${bus.distanceLeft.toFixed(1)} km remaining (${bus.nextStopDist.toFixed(1)} km to next)` : "-- km remaining";
+    
+    // Reverse Geocoding API Logic
+    if (Date.now() - lastGeocodeTime > 15000) {
+        lastGeocodeTime = Date.now();
+        fetch(`https://nominatim.openstreetmap.org/reverse?lat=${bus.lat}&lon=${bus.lng}&format=json`, { headers: { "User-Agent": "SmartBusTrackingApp" } })
+        .then(res => res.json())
+        .then(data => {
+            if(data && data.display_name) {
+                lastGeocodeStr = data.display_name.split(',').slice(0, 3).join(', ');
+                document.getElementById("humanLocation").innerText = lastGeocodeStr;
+            }
+        }).catch(e=>{});
+    }
+    if(!lastGeocodeStr) document.getElementById("humanLocation").innerText = `${bus.lat.toFixed(4)}, ${bus.lng.toFixed(4)}`;
+
+    document.getElementById("passengerCount").innerText = `${bus.passengers}/${busCapacity}`;
+    document.getElementById("busSpeed").innerText = bus.speed ? bus.speed + " km/h" : "0 km/h";
+    
+    if(bus.driver) {
+        document.getElementById("driverDetails").innerText = bus.driver.name + (bus.driver.contact ? ` (${bus.driver.contact})` : "");
+        document.getElementById("busTypeStats").innerText = bus.driver.type;
+    }
+
+    if(!busMarker) {
+        const icon = L.divIcon({ className: 'bus-glow', html: `<ion-icon name="bus" style="font-size:32px; color:#0ea5e9; font-weight:bold;"></ion-icon>`, iconSize: [30, 30], iconAnchor: [15, 15] });
+        busMarker = L.marker([bus.lat, bus.lng], {icon}).addTo(map);
+        if(!customRouteLine) map.setView([bus.lat, bus.lng], 14);
+    } else {
+        const busLatLng = L.latLng(bus.lat, bus.lng);
+        busMarker.setLatLng(busLatLng);
+
+        // Get current map bounds and add a 10% threshold buffer 
+        // to prevent the bus from getting too close to the edge
+        const bounds = map.getBounds();
+        const paddedBounds = bounds.pad(-0.1);
+
+        // Only pan if the bus goes outside the visible area (with buffer)
+        if (!paddedBounds.contains(busLatLng)) {
+            map.panTo(busLatLng, { animate: true, duration: 1 });
+        }
+    }
+    
+    // Process map stops visually
+    if (stopMarkers.length === 0 && bus.stopsForMap && bus.stopsForMap.length >= 3) {
+        const c1 = L.divIcon({ className: 'bus-glow', html: `<div style="background:#10b981;width:15px;height:15px;border-radius:50%;border:2px solid white;"></div>`, iconSize: [15,15]});
+        const c2 = L.divIcon({ className: 'bus-glow', html: `<div style="background:#f59e0b;width:15px;height:15px;border-radius:50%;border:2px solid white;"></div>`, iconSize: [15,15]});
+        const c3 = L.divIcon({ className: 'bus-glow', html: `<div style="background:#ef4444;width:15px;height:15px;border-radius:50%;border:2px solid white;"></div>`, iconSize: [15,15]});
+        stopMarkers.push(L.marker([bus.stopsForMap[0].lat, bus.stopsForMap[0].lng], {icon: c1}).bindPopup("Origin Stop").addTo(map));
+        stopMarkers.push(L.marker([bus.stopsForMap[1].lat, bus.stopsForMap[1].lng], {icon: c2}).bindPopup("Intermediate Transfer").addTo(map));
+        stopMarkers.push(L.marker([bus.stopsForMap[2].lat, bus.stopsForMap[2].lng], {icon: c3}).bindPopup("Final Destination").addTo(map));
+    }
+});
+</script>
+</body>
+</html>

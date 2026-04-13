@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gateway - Hub System</title>
+    <link rel="stylesheet" href="css/theme.css">
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+    <style>
+        .login-container { min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px; position: relative; }
+        .bg-glow-1 { position: absolute; width: 500px; height: 500px; background: radial-gradient(circle, rgba(14, 165, 233, 0.15) 0%, rgba(10, 11, 16, 0) 70%); top: 20%; left: 20%; z-index: 0; pointer-events: none; }
+        .bg-glow-2 { position: absolute; width: 400px; height: 400px; background: radial-gradient(circle, rgba(139, 92, 246, 0.15) 0%, rgba(10, 11, 16, 0) 70%); bottom: 10%; right: 20%; z-index: 0; pointer-events: none; }
+        .auth-card { width: 100%; max-width: 420px; padding: 40px; z-index: 10; }
+        .auth-header { text-align: center; margin-bottom: 30px; }
+        .auth-header h2 { font-size: 32px; margin-bottom: 8px; }
+        .auth-header p { color: var(--text-muted); font-size: 15px; }
+        .tabs { display: flex; background: rgba(0, 0, 0, 0.05); border-radius: 12px; padding: 4px; margin-bottom: 25px; }
+        [data-theme="dark"] .tabs { background: rgba(0, 0, 0, 0.3); }
+        .tab { flex: 1; text-align: center; padding: 10px; border-radius: 10px; color: var(--text-muted); font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.3s; }
+        .tab.active { background: var(--glass-bg); color: var(--text-main); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); border: 1px solid var(--glass-border); }
+        .options { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; font-size: 13px; }
+        .checkbox-group { display: flex; align-items: center; gap: 8px; color: var(--text-muted); cursor: pointer; }
+        .checkbox-group input { accent-color: var(--accent-primary); cursor: pointer; width: 16px; height: 16px; }
+        .forgot-link { color: var(--accent-primary); text-decoration: none; transition: 0.3s; }
+        .forgot-link:hover { opacity: 0.8; text-shadow: 0 0 8px rgba(14, 165, 233, 0.4); }
+        .form-section { display: none; }
+        .form-section.active { display: block; animation: fadeIn 0.4s ease forwards; }
+    </style>
+</head>
+<body>
+
+    <div class="theme-toggle-btn" onclick="toggleTheme()" id="themeBtn"><ion-icon name="moon-outline" id="themeIcon"></ion-icon></div>
+
+    <div class="login-container">
+        <div class="bg-glow-1"></div><div class="bg-glow-2"></div>
+
+        <div class="glass-panel auth-card animate-fade-in delay-1">
+            
+            <div class="auth-header">
+                <h2 class="title-glow text-gradient">System Access</h2>
+                <p>Welcome to the transport ecosystem</p>
+            </div>
+
+            <div class="tabs">
+                <div class="tab active" onclick="switchMainTab('loginView', this)">Login</div>
+                <div class="tab" onclick="switchMainTab('signupView', this)">Sign Up</div>
+            </div>
+
+            <!-- LOGIN VIEW -->
+            <div id="loginView" class="form-section active">
+                <form onsubmit="event.preventDefault(); submitLogin();">
+                    <div class="input-container"><input type="email" id="l_email" class="glass-input" placeholder="Email Address" required></div>
+                    <div class="input-container">
+                        <input type="password" id="l_password" class="glass-input" placeholder="Password" required>
+                        <ion-icon name="eye-off-outline" class="toggle-password" onclick="togglePass('l_password', this)"></ion-icon>
+                    </div>
+                    
+                    <div class="error-text" id="l_apiError" style="text-align:center; font-size:14px; margin-bottom:15px;">Login failed</div>
+
+                    <div class="options">
+                        <label class="checkbox-group"><input type="checkbox" id="rememberMe"> Remember me</label>
+                        <a href="javascript:void(0)" class="forgot-link" onclick="document.getElementById('loginView').classList.remove('active'); document.getElementById('forgotView').classList.add('active');">Forgot password?</a>
+                    </div>
+
+                    <button type="submit" class="btn-neon btn-full" id="l_btn"><span id="l_txt">Verify Connection</span><div class="loader" id="l_loader"></div></button>
+                    <div style="font-size:12px; color:var(--text-muted); text-align:center; margin-top:20px;">For Admin controls: <b>admin@gmail.com</b> and <b>1234</b></div>
+                </form>
+            </div>
+
+            <!-- SIGNUP VIEW -->
+            <div id="signupView" class="form-section">
+                <form onsubmit="event.preventDefault(); submitSignup();">
+                    <div class="input-container"><input type="text" id="s_name" class="glass-input" placeholder="Full Name" required></div>
+                    <div class="input-container"><input type="email" id="s_email" class="glass-input" placeholder="Email Address" required></div>
+                    <div class="input-container">
+                        <input type="password" id="s_password" class="glass-input" placeholder="Password" minlength="4" required>
+                        <ion-icon name="eye-off-outline" class="toggle-password" onclick="togglePass('s_password', this)"></ion-icon>
+                    </div>
+                    
+                    <div class="error-text" id="s_apiError" style="text-align:center; font-size:14px; margin-bottom:15px;">Sign Up failed</div>
+
+                    <button type="submit" class="btn-neon secondary btn-full" id="s_btn"><span id="s_txt">Register Profile</span><div class="loader" id="s_loader"></div></button>
+                </form>
+            </div>
+
+            <!-- FORGOT PASSWORD -->
+            <div id="forgotView" class="form-section">
+                <form onsubmit="event.preventDefault(); document.getElementById('forgotView').classList.remove('active'); document.getElementById('loginView').classList.add('active'); alert('Recovery email simulated sent!');">
+                    <div class="input-container"><input type="email" class="glass-input" placeholder="Registered Email" required></div>
+                    <button type="submit" class="btn-neon btn-full" style="margin-bottom: 20px;">Send Recovery Link</button>
+                    <p style="text-align:center; font-size:14px;"><a href="javascript:void(0)" class="forgot-link" onclick="document.getElementById('forgotView').classList.remove('active'); document.getElementById('loginView').classList.add('active');">← Back to Login</a></p>
+                </form>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        function toggleTheme() {
+            const currentT = document.documentElement.getAttribute("data-theme") || "light";
+            const newT = currentT === "light" ? "dark" : "light";
+            document.documentElement.setAttribute("data-theme", newT);
+            localStorage.setItem("theme", newT);
+            document.getElementById("themeIcon").name = newT === "light" ? "sunny-outline" : "moon-outline";
+        }
+        if (!localStorage.getItem("theme")) localStorage.setItem("theme", "dark");
+        const savedT = localStorage.getItem("theme");
+        document.documentElement.setAttribute("data-theme", savedT);
+        document.addEventListener("DOMContentLoaded", () => {
+            const icon = document.getElementById("themeIcon");
+            if(icon) icon.name = savedT === "light" ? "sunny-outline" : "moon-outline";
+        });
+
+        function switchMainTab(viewId, el) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            el.classList.add('active');
+            document.querySelectorAll('.form-section').forEach(el => el.classList.remove('active'));
+            document.getElementById(viewId).classList.add('active');
+        }
+
+        function togglePass(id, icon) {
+            const i = document.getElementById(id);
+            i.type = i.type === "password" ? "text" : "password";
+            icon.name = i.type === "password" ? "eye-off-outline" : "eye-outline";
+        }
+
+        window.onload = () => {
+            const mem = localStorage.getItem("rememberedEmail");
+            if (mem) { document.getElementById("l_email").value = mem; document.getElementById("rememberMe").checked = true; }
+        }
+
+        function swapState(type, loading) {
+            document.getElementById(type+"_txt").style.display = loading ? "none" : "block";
+            document.getElementById(type+"_loader").style.display = loading ? "block" : "none";
+            document.getElementById(type+"_btn").style.opacity = loading ? "0.6" : "1";
+        }
+
+        async function submitLogin() {
+            const e = document.getElementById("l_email").value.trim(); const p = document.getElementById("l_password").value.trim();
+            const errBox = document.getElementById("l_apiError"); errBox.style.display="none";
+            swapState('l', true);
+            try {
+                const res = await fetch("/api/users/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: e, password: p }) });
+                const json = await res.json();
+                if(json.success) {
+                    if(document.getElementById("rememberMe").checked) localStorage.setItem("rememberedEmail", e);
+                    else localStorage.removeItem("rememberedEmail");
+                    localStorage.setItem("session_user", JSON.stringify(json.user));
+                    localStorage.setItem("auth_token", json.token);
+                    window.location.href = "index.html";
+                } else { errBox.innerText = json.message; errBox.style.display="block"; swapState('l', false); }
+            } catch(e) { errBox.innerText="Network err"; errBox.style.display="block"; swapState('l', false); }
+        }
+
+        async function submitSignup() {
+            const n = document.getElementById("s_name").value.trim(); const e = document.getElementById("s_email").value.trim(); const p = document.getElementById("s_password").value.trim();
+            const errBox = document.getElementById("s_apiError"); errBox.style.display="none";
+            swapState('s', true);
+            try {
+                const res = await fetch("/api/users/signup", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: n, email: e, password: p }) });
+                const json = await res.json();
+                if(json.success) {
+                    // Set auto login
+                    localStorage.setItem("session_user", JSON.stringify(json.user));
+                    localStorage.setItem("auth_token", json.token);
+                    window.location.href = "index.html";
+                } else { errBox.innerText = json.message; errBox.style.display="block"; swapState('s', false); }
+            } catch(e) { errBox.innerText="Network err"; errBox.style.display="block"; swapState('s', false); }
+        }
+    </script>
+</body>
+</html>

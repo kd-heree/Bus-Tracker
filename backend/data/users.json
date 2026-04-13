@@ -1,0 +1,44 @@
+[
+    {
+        "id": "USR-ADMIN",
+        "name": "System Admin",
+        "email": "admin@gmail.com",
+        "password": "$2b$10$PJX1kNTOpRI8zinLvnCOruMS5RkIDPMb1CXqEgVIY8ncQe8ecucOq",
+        "role": "admin"
+    },
+    {
+        "id": "USR-730171",
+        "name": "Nehanth",
+        "email": "nehanth@gmail.com",
+        "password": "$2b$10$dM/pEmrapmwrdyI.tEZ7T.kR4FU0IwI1l6vtwIOnpYAOrz2FShH1m",
+        "role": "user"
+    },
+    {
+        "id": "USR-946679",
+        "name": "Krishna",
+        "email": "krishna@gmail.com",
+        "password": "$2b$10$Zs0EXLDF59d57LK88NM0H.JpKq/0HffBjcIHEvvNcBD7pYm1rEXdK",
+        "role": "user"
+    },
+    {
+        "id": "USR-792107",
+        "name": "Bhumanyu",
+        "email": "bhu@gmail.com",
+        "password": "$2b$10$ykCNEm54.bFfd/rK/Zbj8.KIqTM/bK3AA18sjkISmGXYXyb78ioa2",
+        "role": "user"
+    },
+    {
+        "id": "USR-272763",
+        "name": "Namrata",
+        "email": "namrata@gmail.com",
+        "password": "$2b$10$dZRlitCi9ehtGI0xsWZoRe7IoeBitq9Gy0TVkNkielFO5O1jmoEi6",
+        "role": "user"
+    },
+    {
+        "id": "USR-421530",
+        "name": "Divyansh",
+        "email": "div@gmail.com",
+        "password": "$2b$10$UVBWeT2fnXY/fP2Xj5kX9e3I5HstuIbvUdlMtI9ykiGTIbMFVtpDG",
+        "role": "user"
+    }
+]

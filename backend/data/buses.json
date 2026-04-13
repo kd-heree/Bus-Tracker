@@ -1,0 +1,57 @@
+[
+    {
+        "id": "BUS-101",
+        "routeStr": "Delhi ↔ Jaipur",
+        "start": "Delhi",
+        "end": "Jaipur",
+        "time": "08:00:00",
+        "status": "Scheduled",
+        "type": "Volvo A/C Sleeper",
+        "price": 850,
+        "capacity": 40
+    },
+    {
+        "id": "BUS-102",
+        "routeStr": "Mumbai ↔ Pune",
+        "start": "Mumbai",
+        "end": "Pune",
+        "time": "10:00:00",
+        "status": "Scheduled",
+        "type": "Electric Seater",
+        "price": 450,
+        "capacity": 30
+    },
+    {
+        "id": "BUS-103",
+        "routeStr": "Bangalore ↔ Mysore",
+        "start": "Bangalore",
+        "end": "Mysore",
+        "time": "12:00:00",
+        "status": "Scheduled",
+        "type": "Scania Semi-Sleeper",
+        "price": 600,
+        "capacity": 45
+    },
+    {
+        "id": "BUS-14685",
+        "routeStr": "Kolkata ↔ Darjeeling",
+        "start": "Kolkata",
+        "end": "Darjeeling",
+        "time": "09:30:00",
+        "status": "Scheduled",
+        "type": "Scania Multi-Axle",
+        "price": 1011,
+        "capacity": 40
+    },
+    {
+        "id": "BUS-41770",
+        "routeStr": "Kolkata ↔ Darjeeling",
+        "start": "Kolkata",
+        "end": "Darjeeling",
+        "time": "21:00:00",
+        "status": "Scheduled",
+        "type": "BharatBenz Seater",
+        "price": 911,
+        "capacity": 35
+    }
+]

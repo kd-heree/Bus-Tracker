@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TrackMyBus | Next-Gen Tracker</title>
+    <link rel="stylesheet" href="css/theme.css">
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+    <style>
+        .welcome-container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            position: relative;
+            padding: 20px;
+            overflow: hidden;
+        }
+
+        .bg-glow {
+            position: absolute;
+            width: 800px;
+            height: 800px;
+            background: radial-gradient(circle, rgba(14, 165, 233, 0.1) 0%, rgba(10, 11, 16, 0) 70%);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 0;
+            pointer-events: none;
+            animation: pulse-glow 8s infinite alternate ease-in-out;
+        }
+
+        @keyframes pulse-glow {
+            from { transform: translate(-50%, -50%) scale(0.8); opacity: 0.5; }
+            to { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+        }
+
+        .content-wrapper {
+            z-index: 10;
+            max-width: 600px;
+        }
+
+        .logo-box {
+            width: 120px;
+            height: 120px;
+            background: rgba(255, 255, 255, 0.8);
+            border: 1px solid var(--glass-border);
+            border-radius: 30px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0 auto 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1), inset 0 0 20px rgba(14, 165, 233, 0.2);
+            position: relative;
+            font-size: 50px;
+            color: var(--accent-primary);
+        }
+
+        [data-theme="dark"] .logo-box {
+            background: rgba(15, 23, 42, 0.7);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(14, 165, 233, 0.1);
+        }
+
+        .location-dot {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            width: 25px;
+            height: 25px;
+            background: var(--accent-secondary);
+            border-radius: 50%;
+            border: 3px solid var(--bg-dark);
+            box-shadow: 0 0 15px var(--accent-secondary);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.7); }
+            70% { box-shadow: 0 0 0 15px rgba(139, 92, 246, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(139, 92, 246, 0); }
+        }
+
+        h1 {
+            font-size: 64px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            letter-spacing: -2px;
+            line-height: +1.1;
+        }
+
+        p.subtitle {
+            font-size: 18px;
+            color: var(--text-muted);
+            margin-bottom: 40px;
+            font-weight: 300;
+            max-width: 80%;
+            margin-inline: auto;
+        }
+
+        .stats-row {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-bottom: 40px;
+        }
+
+        .stat-pill {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-main);
+            box-shadow: 0 4px 15px var(--shadow-color);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Theme Toggle -->
+    <div class="theme-toggle-btn" onclick="toggleTheme()" id="themeBtn">
+        <ion-icon name="moon-outline" id="themeIcon"></ion-icon>
+    </div>
+
+    <div class="welcome-container">
+        <div class="bg-glow"></div>
+
+        <div class="content-wrapper">
+            <div class="logo-box animate-fade-in delay-1 floating">
+                <ion-icon name="bus-outline"></ion-icon>
+                <div class="location-dot"></div>
+            </div>
+
+            <h1 class="animate-fade-in delay-2 title-glow">
+                Track<span class="text-gradient">MyBus</span>
+            </h1>
+
+            <p class="subtitle animate-fade-in delay-2">
+                A seamless, real-time public transit tracking ecosystem built for modern cities. Find your route, know the ETA, and ride on time.
+            </p>
+
+            <div class="stats-row animate-fade-in delay-3">
+                <div class="stat-pill"><ion-icon name="location-outline" style="color:var(--accent-primary)"></ion-icon> Live Maps</div>
+                <div class="stat-pill"><ion-icon name="time-outline" style="color:var(--accent-secondary)"></ion-icon> Real ETA</div>
+                <div class="stat-pill"><ion-icon name="shield-checkmark-outline" style="color:var(--success)"></ion-icon> Reliable</div>
+            </div>
+
+            <div class="animate-fade-in delay-3">
+                <button class="btn-neon" onclick="goToLogin()" style="font-size: 18px; padding: 16px 40px;">
+                    Start Journey →
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Theme Logic
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute("data-theme") || "light";
+            const newTheme = currentTheme === "light" ? "dark" : "light";
+            document.documentElement.setAttribute("data-theme", newTheme);
+            localStorage.setItem("theme", newTheme);
+            
+            const icon = document.getElementById("themeIcon");
+            if(icon) icon.name = newTheme === "light" ? "sunny-outline" : "moon-outline";
+        }
+        if (!localStorage.getItem("theme")) localStorage.setItem("theme", "dark");
+        const savedT = localStorage.getItem("theme");
+        document.documentElement.setAttribute("data-theme", savedT);
+        document.addEventListener("DOMContentLoaded", () => {
+            const icon = document.getElementById("themeIcon");
+            if(icon) icon.name = savedT === "light" ? "sunny-outline" : "moon-outline";
+        });
+
+        // Navigation Delay for UX
+        function goToLogin() {
+            const btn = document.querySelector('.btn-neon');
+            btn.innerHTML = 'Connecting... <div class="loader" style="display:inline-block; border-width: 2px; width: 14px; height: 14px;"></div>';
+            setTimeout(() => {
+                window.location.href = "login.html";
+            }, 600);
+        }
+    </script>
+</body>
+</html>
