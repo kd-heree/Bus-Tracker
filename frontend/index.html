@@ -350,6 +350,7 @@
     <script src="/socket.io/socket.io.js"></script>
 
     <script>
+        const BASE_URL = "https://bus-tracker-nn9g.onrender.com";
         // Guard Check & Setup Context
         const sessionUser = JSON.parse(localStorage.getItem("session_user"));
         const authToken = localStorage.getItem("auth_token");
@@ -415,7 +416,7 @@
             resultsContainer.innerHTML = '<div style="text-align:center; color:var(--accent-primary);">Searching...</div>';
             
             try {
-                const res = await fetch(`/api/buses/search-routes?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`, { headers: authHeaders });
+                const res = await fetch(`${BASE_URL}/api/buses/search-routes?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`, { headers: authHeaders });
                 const data = await res.json();
                 socket.emit('userAction', `Searched for routes: ${from} to ${to}`);
                 
@@ -459,7 +460,7 @@
             btn.innerHTML = "Linking to User Database...";
             
             try {
-                const res = await fetch("/api/bookings/create", {
+                const res = await fetch(`${BASE_URL}/api/bookings/create`, {
                     method: "POST", headers: { "Content-Type": "application/json", ...authHeaders },
                     body: JSON.stringify({ userId: sessionUser.id, passengerName: pName, busId: bId, travelDate: tDate, travelTime: tTime, seats })
                 });
@@ -481,7 +482,7 @@
 
         async function syncProfileBookings() {
             const dom = document.getElementById("profileBookingsList");
-            const res = await fetch(`/api/bookings/user/${sessionUser.id}`, { headers: authHeaders });
+            const res = await fetch(`${BASE_URL}/api/bookings/user/${sessionUser.id}`, { headers: authHeaders });
             const data = await res.json();
             if(data.success && data.bookings.length > 0) {
                 dom.innerHTML = data.bookings.map(bk => `
@@ -500,7 +501,7 @@
         }
         
         async function cancelBooking(id) { 
-            await fetch(`/api/bookings/cancel/${id}`, { method: 'DELETE', headers: authHeaders }); 
+            await fetch(`${BASE_URL}/api/bookings/cancel/${id}`, { method: 'DELETE', headers: authHeaders }); 
             socket.emit('userAction', `Cancelled ticket booking ID: ${id}`);
             syncProfileBookings(); 
         }
@@ -510,7 +511,7 @@
             if(sessionUser.role !== 'admin') return;
             
             // Fetch users globally
-            const [uRes, bRes] = await Promise.all([fetch('/api/users', { headers: authHeaders }), fetch('/api/bookings/all', { headers: authHeaders })]);
+            const [uRes, bRes] = await Promise.all([fetch(`${BASE_URL}/api/users`, { headers: authHeaders }), fetch(`${BASE_URL}/api/bookings/all`, { headers: authHeaders })]);
             const uData = await uRes.json();
             const bData = await bRes.json();
 
@@ -555,7 +556,7 @@
         // --- EXTENDED SYNC APIs ---
         async function fetchActiveBuses() {
              try {
-                 const res = await fetch('/api/activeBuses', { headers: authHeaders });
+                 const res = await fetch(`${BASE_URL}/api/activeBuses`, { headers: authHeaders });
                  const data = await res.json();
                  if(data.success) {
                       document.getElementById('adminStatFleet').innerText = data.activeBuses.length || 0;
@@ -582,7 +583,7 @@
 
         async function fetchGlobalBuses() {
              try {
-                 const res = await fetch('/api/buses/available', { headers: authHeaders });
+                 const res = await fetch(`${BASE_URL}/api/buses/available`, { headers: authHeaders });
                  const data = await res.json();
                  if(data.success) {
                      window._allGlobalStaticBuses = data.buses;
@@ -660,7 +661,7 @@
                 status: "Scheduled"
             };
 
-            const url = payload.id ? `/api/buses/${payload.id}` : `/api/buses/create`;
+            const url = payload.id ? `${BASE_URL}/api/buses/${payload.id}` : `${BASE_URL}/api/buses/create`;
             const method = payload.id ? 'PUT' : 'POST';
 
             try {
@@ -677,7 +678,7 @@
         async function deleteGlobalBus(id) {
             if(!confirm(`Are you sure you want to delete bus ${id} from global fleet?`)) return;
             try {
-                const res = await fetch(`/api/buses/${id}`, { method: 'DELETE', headers: authHeaders });
+                const res = await fetch(`${BASE_URL}/api/buses/${id}`, { method: 'DELETE', headers: authHeaders });
                 const data = await res.json();
                 if(data.success) { Object.assign({}, window._allGlobalStaticBuses); fetchGlobalBuses(); alert("Bus removed successfully."); }
                 else alert(data.message);
@@ -734,7 +735,7 @@
              document.getElementById("userDetailsModal").style.display = "flex";
 
              try {
-                 const res = await fetch(`/api/bookings/user/${uId}`, { headers: authHeaders });
+                 const res = await fetch(`${BASE_URL}/api/bookings/user/${uId}`, { headers: authHeaders });
                  const data = await res.json();
                  
                  const container = document.getElementById("modalUserBookings");
@@ -774,7 +775,7 @@
                  driverContact: document.getElementById("cfgDriverContact").value
              };
              try {
-                 const res = await fetch(`/api/activeBuses/${id}`, { method: 'PUT', headers: { "Content-Type": "application/json", ...authHeaders }, body: JSON.stringify(payload) });
+                 const res = await fetch(`${BASE_URL}/api/activeBuses/${id}`, { method: 'PUT', headers: { "Content-Type": "application/json", ...authHeaders }, body: JSON.stringify(payload) });
                  const data = await res.json();
                  if(data.success) {
                      closeBusConfigModal();
@@ -790,7 +791,7 @@
              if(!confirm(`Are you absolutely sure you want to permanently delete user ${uId} and ALL their bookings? This cannot be undone.`)) return;
              
              try {
-                  const res = await fetch(`/api/users/${uId}`, { method: 'DELETE', headers: authHeaders });
+                  const res = await fetch(`${BASE_URL}/api/users/${uId}`, { method: 'DELETE', headers: authHeaders });
                   const data = await res.json();
                   if(data.success) {
                        closeUserModal();
@@ -827,7 +828,7 @@
 
         async function sApp(id, tgt) {
             const q = document.getElementById(id).value; if(q.length<3) return;
-            const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`); const dat = await res.json();
+            const res = await fetch(`${BASE_URL}/api/search?q=${encodeURIComponent(q)}`); const dat = await res.json();
             const b = document.getElementById(tgt); b.innerHTML = "";
             if(dat.length>0) {
                 b.style.display="block";

@@ -97,6 +97,7 @@
     </div>
 
     <script>
+        const BASE_URL = "https://bus-tracker-nn9g.onrender.com";
         function toggleTheme() {
             const currentT = document.documentElement.getAttribute("data-theme") || "light";
             const newT = currentT === "light" ? "dark" : "light";
@@ -141,7 +142,7 @@
             const errBox = document.getElementById("l_apiError"); errBox.style.display="none";
             swapState('l', true);
             try {
-                const res = await fetch("/api/users/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: e, password: p }) });
+                const res = await fetch(`${BASE_URL}/api/users/login`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: e, password: p }) });
                 const json = await res.json();
                 if(json.success) {
                     if(document.getElementById("rememberMe").checked) localStorage.setItem("rememberedEmail", e);
@@ -158,7 +159,7 @@
             const errBox = document.getElementById("s_apiError"); errBox.style.display="none";
             swapState('s', true);
             try {
-                const res = await fetch("/api/users/signup", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: n, email: e, password: p }) });
+                const res = await fetch(`${BASE_URL}/api/users/signup`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: n, email: e, password: p }) });
                 const json = await res.json();
                 if(json.success) {
                     // Set auto login

@@ -107,6 +107,7 @@
 <script src="/socket.io/socket.io.js"></script>
 
 <script>
+const BASE_URL = "https://bus-tracker-nn9g.onrender.com";
 // Authentication check
 let sessionUser = JSON.parse(localStorage.getItem("session_user"));
 let authToken = localStorage.getItem("auth_token");
@@ -172,7 +173,7 @@ if(cRouteRaw) {
 }
 
 // Data connections: 1. Bus Data, 2. Booked Occupancy Sync
-fetch(`/api/buses/${targetBusId}`, { headers: authHeaders }).then(res=>res.json()).then(data => {
+fetch(`${BASE_URL}/api/buses/${targetBusId}`, { headers: authHeaders }).then(res=>res.json()).then(data => {
     if(data.success && data.bus) {
         document.getElementById("routeText").innerText = data.bus.routeStr;
         document.getElementById("busTypeStats").innerText = data.bus.type;
@@ -180,14 +181,14 @@ fetch(`/api/buses/${targetBusId}`, { headers: authHeaders }).then(res=>res.json(
     }
 }).catch(e=>console.error("Bus DB Check failed", e));
 
-fetch(`/api/bookings/bus/${targetBusId}`, { headers: authHeaders }).then(res=>res.json()).then(data => {
+fetch(`${BASE_URL}/api/bookings/bus/${targetBusId}`, { headers: authHeaders }).then(res=>res.json()).then(data => {
     if(data.success && data.totalBookedSeats !== undefined) {
         document.getElementById("passengerCount").innerText = `${data.totalBookedSeats}/${busCapacity}`;
     }
 }).catch(e=>console.error("Booking Check failed", e));
 
 let hasActiveBooking = false;
-fetch(`/api/bookings/user/${sessionUser.id}`, { headers: authHeaders }).then(res=>res.json()).then(data => {
+fetch(`${BASE_URL}/api/bookings/user/${sessionUser.id}`, { headers: authHeaders }).then(res=>res.json()).then(data => {
     const detailsBox = document.getElementById("passengerLoadDetails");
     if(data.success && data.bookings) {
         const activeBooking = data.bookings.find(b => b.busId === targetBusId && b.status === "Confirmed");
