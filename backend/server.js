@@ -2,6 +2,7 @@
 const express = require("express");
 const http = require("http");
 const socketIo = require("socket.io");
+const cors = require("cors");
 const path = require("path");
 const fs = require("fs");
 const jwt = require("jsonwebtoken");
@@ -15,9 +16,17 @@ const bookingRoutes = require("./routes/bookingRoutes");
 // ================= APP SETUP =================
 const app = express();
 const server = http.createServer(app);
-const io = socketIo(server);
+const io = socketIo(server, {
+    cors: {
+        origin: "https://bus-tracker-swart.vercel.app",
+        methods: ["GET", "POST"]
+    }
+});
 
 // Middleware
+app.use(cors({
+    origin: "https://bus-tracker-swart.vercel.app"
+}));
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "../frontend")));
 
@@ -293,9 +302,12 @@ setInterval(() => {
 }, 800);
 
 // ================= SERVER START =================
-server.listen(3000, () => {
-  console.log("==========================================");
-  console.log("✅ REAL-TIME INTEGRATED SYSTEM ALIVE");
-  console.log("▶  PORT: 3000");
-  console.log("==========================================");
+
+const PORT = process.env.PORT || 3000;
+
+server.listen(PORT, "0.0.0.0", () => {
+    console.log("==========================================");
+    console.log("✅ REAL-TIME INTEGRATED SYSTEM ALIVE");
+    console.log(`▶ PORT: ${PORT}`);
+    console.log("==========================================");
 });
